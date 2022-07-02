@@ -3,6 +3,7 @@ import BaseQueue from './base.queue';
 import { Candidate } from '../entity/candidate.entity';
 import MySql from '../mysql';
 import RedisCli from '../redis';
+import { socketIo } from '../server';
 
 const redis = RedisCli.getInstance();
 
@@ -43,7 +44,13 @@ export default class CandidateQueue extends BaseQueue {
     console.log(`Candidato ${name} - ${partyNumber} criado com suceso.`);
 
     const candidates = await MySql.manager.find(Candidate);
-    await redis.setJSON('candidates', candidates);    
+    await redis.setJSON('candidates', candidates);
+    this.emitSocket(candidates);
+  }
+
+  private emitSocket(candidates) {
+    socketIo.emit('candidates', candidates);
+    console.log('Candidatos enviados via socket');
   }
 
 }
